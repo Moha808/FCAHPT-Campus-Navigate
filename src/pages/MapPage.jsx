@@ -83,40 +83,42 @@ const MapPage = () => {
       </AnimatePresence>
       
       {/* The Master Bottom Sheet / Side Panel */}
-      <BottomSheet isOpen={true} heightClass={sheetHeightClass}>
-        <AnimatePresence mode="wait">
-          {!selectedLocation ? (
-            <motion.div
-              key="list"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="h-full"
-            >
-              <LocationList 
-                locations={locations} 
-                onSelect={setSelectedLocation} 
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="details"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
-              className="h-full"
-            >
-              <LocationDetails 
-                location={selectedLocation} 
-                onBack={() => setSelectedLocation(null)}
-                onGetDirections={handleGetDirections}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </BottomSheet>
+      {!isRoutingMode && (
+        <BottomSheet isOpen={true} heightClass={sheetHeightClass}>
+          <AnimatePresence mode="wait">
+            {!selectedLocation ? (
+              <motion.div
+                key="list"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="h-full"
+              >
+                <LocationList 
+                  locations={locations} 
+                  onSelect={setSelectedLocation} 
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="details"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+                className="h-full"
+              >
+                <LocationDetails 
+                  location={selectedLocation} 
+                  onBack={() => setSelectedLocation(null)}
+                  onGetDirections={handleGetDirections}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </BottomSheet>
+      )}
       
       {/* Desktop overlay button to close details */}
       {selectedLocation && (

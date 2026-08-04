@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import RoutingComponent from './RoutingComponent';
-import { Layers } from 'lucide-react';
+import { Layers, GraduationCap, Building2, Stethoscope, Home, Landmark } from 'lucide-react';
 
 // Stable constant - never regenerated to prevent map reloads
 const MAP_ID = 'fcahpt-campus-map-v1';
@@ -17,14 +17,14 @@ const MapController = ({ center }) => {
   return null;
 };
 
-// Category → color and emoji icon
+// Category → color and Lucide icon
 const getCategoryStyle = (category) => {
   switch (category) {
-    case 'academic': return { color: '#3b82f6', emoji: '🎓' };
-    case 'admin':    return { color: '#a855f7', emoji: '🏛️' };
-    case 'clinic':   return { color: '#22c55e', emoji: '🏥' };
-    case 'hostel':   return { color: '#f97316', emoji: '🛏️' };
-    default:         return { color: '#eab308', emoji: '📍' };
+    case 'academic': return { color: '#3b82f6', Icon: GraduationCap };
+    case 'admin':    return { color: '#a855f7', Icon: Building2 };
+    case 'clinic':   return { color: '#22c55e', Icon: Stethoscope };
+    case 'hostel':   return { color: '#f97316', Icon: Home };
+    default:         return { color: '#eab308', Icon: Landmark };
   }
 };
 
@@ -51,7 +51,7 @@ const CampusMap = ({ locations, selectedLocation, onMarkerClick, routeStart, rou
           style={{ width: '100%', height: '100%' }}
         >
           {locations.map((loc) => {
-            const { color, emoji } = getCategoryStyle(loc.category);
+            const { color, Icon } = getCategoryStyle(loc.category);
             const isSelected = selectedLocation?.id === loc.id;
 
             return (
@@ -72,11 +72,11 @@ const CampusMap = ({ locations, selectedLocation, onMarkerClick, routeStart, rou
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: isSelected ? '18px' : '14px',
                     transition: 'all 0.2s ease',
                     marginBottom: '3px',
+                    color: 'white',
                   }}>
-                    {emoji}
+                    <Icon style={{ width: isSelected ? '20px' : '16px', height: isSelected ? '20px' : '16px' }} />
                   </div>
                   {/* Name label */}
                   <div style={{
