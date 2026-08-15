@@ -11,6 +11,36 @@ const DirectionsUI = ({ locations, onClose, initialDestination, onRouteUpdate })
   
   const [activeInput, setActiveInput] = useState(null); // 'from' or 'to'
 
+  const [isLocating, setIsLocating] = useState(false);
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser');
+      return;
+    }
+    
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setIsLocating(false);
+        const userLocation = {
+          id: 'current-user-location',
+          name: 'My Current Location',
+          category: 'user-location',
+          color: 'bg-blue-600',
+          coordinates: [position.coords.latitude, position.coords.longitude]
+        };
+        handleSelect(userLocation, activeInput);
+      },
+      (error) => {
+        setIsLocating(false);
+        alert('Unable to retrieve your location. Please check your permissions.');
+        console.error('Error getting location:', error);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
   const filteredLocations = (query) => {
     if (!query) return locations;
     return locations.filter(loc => loc.name.toLowerCase().includes(query.toLowerCase()));
@@ -123,13 +153,35 @@ const DirectionsUI = ({ locations, onClose, initialDestination, onRouteUpdate })
             className="border-t border-gray-100 max-h-[40vh] overflow-y-auto bg-white"
           >
             <div className="p-2">
+              {/* Use Current Location Button */}
+              {((activeInput === 'from' && !fromQuery) || (activeInput === 'to' && !toQuery)) && (
+                <button
+                  onClick={handleUseCurrentLocation}
+                  disabled={isLocating}
+                  className="w-full text-left p-3 rounded-xl hover:bg-blue-50 transition-colors flex items-center mb-2 border border-blue-100 bg-blue-50/30"
+                >
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white shrink-0 mr-3 shadow-sm">
+                    {isLocating ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <Navigation className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="font-bold text-blue-700 text-sm">
+                      {isLocating ? 'Locating...' : 'Use My Current Location'}
+                    </div>
+                  </div>
+                </button>
+              )}
+
               {filteredLocations(activeInput === 'from' ? fromQuery : toQuery).map(loc => (
                 <button
                   key={loc.id}
                   onClick={() => handleSelect(loc, activeInput)}
                   className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex items-center"
                 >
-                  <div className={`w-8 h-8 rounded-full ${loc.color} flex items-center justify-center text-white shrink-0 mr-3 shadow-sm`}>
+                  <div className={`w-8 h-8 rounded-full ${loc.color || 'bg-brand-500'} flex items-center justify-center text-white shrink-0 mr-3 shadow-sm`}>
                     <MapPin className="w-4 h-4" />
                   </div>
                   <div>
