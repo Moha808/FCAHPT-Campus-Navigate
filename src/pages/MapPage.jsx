@@ -92,10 +92,10 @@ const MapPage = () => {
   };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden font-sans">
+    <div className="relative w-full h-screen h-[100dvh] overflow-hidden font-sans">
 
       {/* ── Full-screen Map ─────────────────────────────────────────────── */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 w-full h-full">
         <CampusMap
           locations={visibleLocations}
           selectedLocation={selectedLocation}

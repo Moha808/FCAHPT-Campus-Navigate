@@ -1,25 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
+import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import RoutingComponent from './RoutingComponent';
 import { Layers, GraduationCap, Building2, Stethoscope, Home, Landmark } from 'lucide-react';
 
 // Stable constant - never regenerated to prevent map reloads
 const MAP_ID = 'fcahpt-campus-map-v1';
 
-// ── Campus boundary (covers all 22 FCAHPT locations with padding) ───────────
-// Northernmost: Public Health Lecture Hall  9.7322
-// Southernmost: Orchard                     9.7263
-// Easternmost:  7 O'clock Gate              8.7952
-// Westernmost:  Bursary/Admin Block         8.7872
-// Red-marked area (NW corner):              ~9.736, ~8.781
+// ── Campus boundary restricted to the FCAHPT school axis ────────────────────
 const CAMPUS_BOUNDS = {
-  north:  9.7400,  // expanded north to include red-marked NW area
-  south:  9.7215,  // bottom edge
-  east:   8.8010,  // ← fixed typo (was 9.8010)
-  west:   8.7780,  // expanded west to include red-marked NW area
+  north: 9.7420,
+  south: 9.7180,
+  east:  8.8050,
+  west:  8.7750,
 };
-const MIN_ZOOM = 14;   // lowered so you can zoom out enough to see the full campus
-const MAX_ZOOM = 21;   // max zoom-in
+const MIN_ZOOM = 15;   // restricts zoom out to only the school axis
+const MAX_ZOOM = 21;   // max zoom-in for inspecting buildings and pathways
 
 const MapController = ({ center }) => {
   const map = useMap();
@@ -45,32 +40,26 @@ const getCategoryStyle = (category) => {
 
 const CampusMap = ({ locations, selectedLocation, onMarkerClick, routeStart, routeEnd }) => {
   const defaultCenter = { lat: 9.7285, lng: 8.7915 };
-  const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-  const [mapType, setMapType] = useState('hybrid'); // 'hybrid' | 'roadmap'
-
-  if (!API_KEY) {
-    return <div className="w-full h-full flex items-center justify-center bg-gray-100">API Key Missing</div>;
-  }
+  const [mapType, setMapType] = useState('hybrid');
 
   return (
-    <div className="absolute inset-0 z-0">
-      <APIProvider apiKey={API_KEY}>
-        <Map
-          defaultCenter={defaultCenter}
-          defaultZoom={16}
-          minZoom={MIN_ZOOM}
-          maxZoom={MAX_ZOOM}
-          mapId={MAP_ID}
-          mapTypeId={mapType}
-          disableDefaultUI={true}
-          zoomControl={true}
-          gestureHandling="greedy"
-          restriction={{
-            latLngBounds: CAMPUS_BOUNDS,
-            strictBounds: true,
-          }}
-          style={{ width: '100%', height: '100%' }}
-        >
+    <div className="absolute inset-0 z-0 w-full h-full">
+      <Map
+        defaultCenter={defaultCenter}
+        defaultZoom={16}
+        minZoom={MIN_ZOOM}
+        maxZoom={MAX_ZOOM}
+        mapId={MAP_ID}
+        mapTypeId={mapType}
+        disableDefaultUI={true}
+        zoomControl={true}
+        gestureHandling="greedy"
+        restriction={{
+          latLngBounds: CAMPUS_BOUNDS,
+          strictBounds: false,
+        }}
+        style={{ width: '100%', height: '100%' }}
+      >
           {locations.map((loc) => {
             const { color, Icon } = getCategoryStyle(loc.category);
             const isSelected = selectedLocation?.id === loc.id;
@@ -134,7 +123,6 @@ const CampusMap = ({ locations, selectedLocation, onMarkerClick, routeStart, rou
           )}
 
         </Map>
-      </APIProvider>
 
       {/* Map Type Toggle Button */}
       <button
