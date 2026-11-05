@@ -10,14 +10,14 @@ import { locations } from '../data/locations';
 const MAP_ID  = 'fcahpt-admin-map-v1';
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-// ── Campus boundary restricted to the FCAHPT school axis ────────────────────
+// ── Campus boundary restricted tightly to the immediate FCAHPT school axis ──
 const CAMPUS_BOUNDS = {
-  north: 9.7420,
-  south: 9.7180,
-  east:  8.8050,
-  west:  8.7750,
+  north: 9.7365,
+  south: 9.7220,
+  east:  8.8015,
+  west:  8.7810,
 };
-const MIN_ZOOM = 15;
+const MIN_ZOOM = 16;
 const MAX_ZOOM = 21;
 
 // Category colours — matches the main map

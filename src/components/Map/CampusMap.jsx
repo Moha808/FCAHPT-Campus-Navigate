@@ -6,15 +6,15 @@ import { Layers, GraduationCap, Building2, Stethoscope, Home, Landmark } from 'l
 // Stable constant - never regenerated to prevent map reloads
 const MAP_ID = 'fcahpt-campus-map-v1';
 
-// ── Campus boundary restricted to the FCAHPT school axis ────────────────────
+// ── Campus boundary restricted tightly to the immediate FCAHPT school axis ──
 const CAMPUS_BOUNDS = {
-  north: 9.7420,
-  south: 9.7180,
-  east:  8.8050,
-  west:  8.7750,
+  north: 9.7365,
+  south: 9.7220,
+  east:  8.8015,
+  west:  8.7810,
 };
-const MIN_ZOOM = 15;   // restricts zoom out to only the school axis
-const MAX_ZOOM = 21;   // max zoom-in for inspecting buildings and pathways
+const MIN_ZOOM = 16;   // restricts zoom-out strictly to this school perimeter
+const MAX_ZOOM = 21;   // allows detailed zoom-in for buildings and paths
 
 const MapController = ({ center }) => {
   const map = useMap();
