@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useMap } from '@vis.gl/react-google-maps';
 import { loadRoadNetwork } from '../../services/db';
-import { findClosestNode, findShortestPath } from '../../utils/pathfinding';
+import { findClosestNode, findShortestPath, findRobustPath } from '../../utils/pathfinding';
 
 const RoutingComponent = ({ start, end }) => {
   const map = useMap();
@@ -26,39 +26,13 @@ const RoutingComponent = ({ start, end }) => {
       polylineRef.current.setMap(null);
     }
 
-    let finalPath = [];
-
-    // 1. If we have a graph, try Dijkstra
-    if (network.nodes.length > 0) {
-      // Find closest nodes in graph to start and end buildings
-      const startNode = findClosestNode(start.coordinates[0], start.coordinates[1], network.nodes);
-      const endNode = findClosestNode(end.coordinates[0], end.coordinates[1], network.nodes);
-
-      if (startNode && endNode) {
-        // Run Dijkstra
-        const graphPath = findShortestPath(startNode.id, endNode.id, network.nodes, network.edges);
-        
-        if (graphPath) {
-          // Construct the final visual path:
-          // Actual Start Building -> Closest Graph Node -> ...Dijkstra Path... -> Closest End Node -> Actual End Building
-          finalPath = [
-            { lat: start.coordinates[0], lng: start.coordinates[1] },
-            ...graphPath,
-            { lat: end.coordinates[0], lng: end.coordinates[1] }
-          ];
-        }
-      }
-    }
-
-    // 2. Fallback if Dijkstra failed (e.g. disconnected graph) or no graph exists
-    let isFallback = false;
-    if (finalPath.length === 0) {
-      isFallback = true;
-      finalPath = [
-        { lat: start.coordinates[0], lng: start.coordinates[1] },
-        { lat: end.coordinates[0], lng: end.coordinates[1] }
-      ];
-    }
+    // 1. Calculate robust walking route using Dijkstra with multi-candidate search & component bridging
+    const routeResult = findRobustPath(start, end, network.nodes, network.edges);
+    const finalPath = routeResult?.path || [
+      { lat: start.coordinates ? start.coordinates[0] : start.lat, lng: start.coordinates ? start.coordinates[1] : start.lng },
+      { lat: end.coordinates ? end.coordinates[0] : end.lat, lng: end.coordinates ? end.coordinates[1] : end.lng }
+    ];
+    const isFallback = routeResult ? routeResult.isFallback : true;
 
     // 3. Draw the full background network to help debugging
     const networkPolylines = [];

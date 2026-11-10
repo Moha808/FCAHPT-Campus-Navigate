@@ -5,6 +5,7 @@ import { auth } from '../config/firebase';
 import { LogOut, Map as MapIcon, Save, Trash2, ShieldAlert, MousePointerClick, CheckCircle2, XCircle, X } from 'lucide-react';
 import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 import { saveRoadNetwork, loadRoadNetwork } from '../services/db';
+import { getDistance } from '../utils/pathfinding';
 import { locations } from '../data/locations';
 
 const MAP_ID  = 'fcahpt-admin-map-v1';
@@ -106,10 +107,55 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleNodeClick = useCallback((nodeId, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    if (mode === 'draw') {
+      if (selectedNodeId && selectedNodeId !== nodeId) {
+        // Connect the active node to this clicked node
+        setEdges(prev => {
+          const exists = prev.some(ed =>
+            (ed.source === selectedNodeId && ed.target === nodeId) ||
+            (ed.source === nodeId && ed.target === selectedNodeId)
+          );
+          if (exists) return prev;
+          return [...prev, { id: `edge_${selectedNodeId}_${nodeId}_${Date.now()}`, source: selectedNodeId, target: nodeId }];
+        });
+        setSelectedNodeId(nodeId);
+      } else if (selectedNodeId === nodeId) {
+        // Clicking the currently selected node deselects it so user can start a fresh path elsewhere
+        setSelectedNodeId(null);
+      } else {
+        setSelectedNodeId(nodeId);
+      }
+    } else if (mode === 'delete') {
+      setNodes(prev => prev.filter(n => n.id !== nodeId));
+      setEdges(prev => prev.filter(ed => ed.source !== nodeId && ed.target !== nodeId));
+      if (selectedNodeId === nodeId) setSelectedNodeId(null);
+    }
+  }, [mode, selectedNodeId]);
+
   const handleMapClick = useCallback((e) => {
     if (mode !== 'draw') return;
     const lat = e.detail.latLng.lat;
     const lng = e.detail.latLng.lng;
+
+    // Check if the click is very close to an existing node (snap within ~8 meters)
+    const snapThresholdMeters = 8;
+    let closestNode = null;
+    let minD = Infinity;
+    for (const node of nodes) {
+      const d = getDistance(lat, lng, node.lat, node.lng);
+      if (d < minD) {
+        minD = d;
+        closestNode = node;
+      }
+    }
+
+    if (closestNode && minD <= snapThresholdMeters) {
+      handleNodeClick(closestNode.id);
+      return;
+    }
+
     const newId = `node_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     const newNode = { id: newId, lat, lng };
 
@@ -121,18 +167,7 @@ const AdminDashboard = () => {
     });
 
     setSelectedNodeId(newId);
-  }, [mode, selectedNodeId]);
-
-  const handleNodeClick = useCallback((nodeId, e) => {
-    if (e) e.stopPropagation();
-    if (mode === 'draw') {
-      setSelectedNodeId(nodeId);
-    } else if (mode === 'delete') {
-      setNodes(prev => prev.filter(n => n.id !== nodeId));
-      setEdges(prev => prev.filter(ed => ed.source !== nodeId && ed.target !== nodeId));
-      if (selectedNodeId === nodeId) setSelectedNodeId(null);
-    }
-  }, [mode, selectedNodeId]);
+  }, [mode, selectedNodeId, nodes, handleNodeClick]);
 
   const closeModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
 
@@ -206,7 +241,7 @@ const AdminDashboard = () => {
       <main className="flex-1 flex flex-col relative h-full w-full min-h-0 overflow-hidden">
 
         {/* Floating mode toolbar — top centre */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md px-3 py-2 rounded-2xl shadow-xl border border-gray-200 z-20 flex gap-2">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md px-3 py-2 rounded-2xl shadow-xl border border-gray-200 z-20 flex items-center gap-2">
           <button
             onClick={() => { setMode('draw'); setSelectedNodeId(null); }}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
@@ -223,15 +258,25 @@ const AdminDashboard = () => {
           >
             <Trash2 className="w-4 h-4" /> Delete
           </button>
+          {mode === 'draw' && selectedNodeId && (
+            <button
+              onClick={() => setSelectedNodeId(null)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold hover:bg-amber-200 transition-colors shadow-sm"
+              title="Stop extending current path and start fresh elsewhere"
+            >
+              Start New Path
+            </button>
+          )}
         </div>
 
         {/* Help hint — top right */}
-        <div className="absolute top-4 right-4 z-20 hidden sm:block bg-white/90 backdrop-blur-md rounded-xl px-3 py-2 shadow border border-gray-200 text-xs text-gray-600 max-w-[180px]">
-          <p className="font-bold text-gray-800 mb-1">How to draw:</p>
+        <div className="absolute top-4 right-4 z-20 hidden sm:block bg-white/90 backdrop-blur-md rounded-xl px-3 py-2 shadow border border-gray-200 text-xs text-gray-600 max-w-[200px]">
+          <p className="font-bold text-gray-800 mb-1">How to draw roads:</p>
           <ul className="space-y-0.5 list-disc pl-3">
             <li>Tap map to drop a node</li>
-            <li>Nodes auto-connect in sequence</li>
-            <li>Tap existing node to branch</li>
+            <li>Nodes auto-connect as you draw</li>
+            <li>Tap existing node to connect to it</li>
+            <li>Tap active node to start new path</li>
             <li>Use Delete mode to remove</li>
           </ul>
         </div>
@@ -268,31 +313,31 @@ const AdminDashboard = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none' }}>
                       {/* Coloured circle pin */}
                       <div style={{
-                        width: '18px',
-                        height: '18px',
+                        width: '24px',
+                        height: '24px',
                         borderRadius: '50%',
                         backgroundColor: color,
                         border: '3px solid white',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.6)',
                         marginBottom: '3px',
                         flexShrink: 0,
                       }} />
                       {/* Name label */}
                       <div style={{
-                        backgroundColor: 'rgba(0,0,0,0.75)',
+                        backgroundColor: 'rgba(0,0,0,0.85)',
                         color: 'white',
                         fontSize: '11px',
                         fontWeight: '700',
                         fontFamily: 'Inter, sans-serif',
-                        padding: '2px 7px',
+                        padding: '3px 8px',
                         borderRadius: '6px',
                         whiteSpace: 'nowrap',
-                        maxWidth: '140px',
+                        maxWidth: '160px',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         lineHeight: '1.4',
                         letterSpacing: '0.1px',
-                        boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
                       }}>
                         {loc.name}
                       </div>
@@ -311,18 +356,18 @@ const AdminDashboard = () => {
                   <AdvancedMarker
                     key={node.id}
                     position={{ lat: node.lat, lng: node.lng }}
-                    onClick={() => handleNodeClick(node.id)}
+                    onClick={(e) => handleNodeClick(node.id, e)}
                     zIndex={isDelete ? 100 : (isSelected ? 50 : 10)}
                   >
                     <div style={{
-                      width:           isSelected ? '18px' : '14px',
-                      height:          isSelected ? '18px' : '14px',
+                      width:           isSelected ? '22px' : '15px',
+                      height:          isSelected ? '22px' : '15px',
                       borderRadius:    '50%',
                       backgroundColor: isSelected ? '#f59e0b' : (isDelete ? '#ef4444' : '#ffffff'),
                       border:          `2.5px solid ${isSelected ? '#b45309' : '#0f172a'}`,
                       cursor:          'pointer',
                       transition:      'all 0.15s',
-                      boxShadow:       '0 2px 6px rgba(0,0,0,0.6)',
+                      boxShadow:       isSelected ? '0 0 0 4px rgba(245, 158, 11, 0.4), 0 2px 8px rgba(0,0,0,0.6)' : '0 2px 6px rgba(0,0,0,0.6)',
                     }} />
                   </AdvancedMarker>
                 );

@@ -173,7 +173,7 @@ export const locations = [
     description: 'Local campus market and shopping area.',
     category: 'facility',
     coordinates: [9.727854879077038, 8.792818034171036],
-    image: '/images/gate.jpg'
+    image: '/images/lombin_market.jpg'
   },
   {
     id: '22',
