@@ -13,7 +13,7 @@ export const locations = [
     description: 'One of the main entrance gates to the campus.',
     category: 'facility',
     coordinates: [9.72729973600469, 8.7952038246249],
-    image: '/images/gate.jpg'
+    image: '/images/7_oclock_gate.jpg'
   },
   {
     id: '2',
@@ -53,7 +53,7 @@ export const locations = [
     description: 'Male student residential block (MLT section).',
     category: 'hostel',
     coordinates: [9.72892270600265, 8.790571930870977],
-    image: '/images/hostel.jpg'
+    image: '/images/boys_hostel.jpg'
   },
   {
     id: '7',
@@ -61,7 +61,7 @@ export const locations = [
     description: 'Main campus football field for sports, recreation, and events.',
     category: 'facility',
     coordinates: [9.729625911974157, 8.78986919210868],
-    image: '/images/sports.jpg'
+    image: '/images/football_field.jpg'
   },
   {
     id: '8',
@@ -69,7 +69,7 @@ export const locations = [
     description: 'Main AV boys residential block.',
     category: 'hostel',
     coordinates: [9.728366220538474, 8.789568784687386],
-    image: '/images/hostel.jpg'
+    image: '/images/boys_hostel.jpg'
   },
   {
     id: '9',
@@ -93,7 +93,7 @@ export const locations = [
     description: 'Male student residential block.',
     category: 'hostel',
     coordinates: [9.728794489715305, 8.78885531708548],
-    image: '/images/hostel.jpg'
+    image: '/images/boys_hostel.jpg'
   },
   {
     id: '12',
@@ -101,7 +101,7 @@ export const locations = [
     description: 'The primary entrance and exit for the campus.',
     category: 'facility',
     coordinates: [9.730846808312368, 8.791364276881733],
-    image: '/images/gate.jpg'
+    image: '/images/main_gate.jpg'
   },
   {
     id: '13',
@@ -117,7 +117,7 @@ export const locations = [
     description: 'Main transportation hub for students.',
     category: 'facility',
     coordinates: [9.729845536107023, 8.789028072820928],
-    image: '/images/gate.jpg'
+    image: '/images/bus_stop.jpg'
   },
   {
     id: '15',
@@ -125,7 +125,7 @@ export const locations = [
     description: 'Administrative offices and bursary services.',
     category: 'admin',
     coordinates: [9.728518432736282, 8.787230992778017],
-    image: '/images/academic.jpg'
+    image: '/images/admin_block.jpg'
   },
   {
     id: '16',
